@@ -52,9 +52,9 @@ angular.module('angularjs.bootstrap.tagsinput', [])
 
         function loadInitTags(tags) {
             if(tags != null) {
-                _.each(tags, function(t) {
-                    addTag(t);
-                });
+                for(var i=0; i<tags.length; i++) {
+                    addTag(tags[i]);
+                }
             }
         }
 
@@ -125,9 +125,11 @@ angular.module('angularjs.bootstrap.tagsinput', [])
         }
 
         function getTagData(tagKey) {
-            return _.find(tagMap, function(t) {
-                return t.key === tagKey;
-            });
+            for(var i=0; i<tagMap.length; i++) {
+                if(tagMap[i].key === tagKey) {
+                    return tagMap[i];
+                }
+            }
         }
 
         function addTag(tagKey) {
