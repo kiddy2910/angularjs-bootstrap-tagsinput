@@ -1,0 +1,31 @@
+{
+    "name": "angularjs-bootstrap-tagsinput",
+    "version": "0.1.0",
+    "description": "Tagsinput was written by Angular JS framework and styled by Bootstrap 3",
+    "main": "src/tagsinput.js",
+    "keywords": [
+        "tagsinput",
+        "bootstrap-tagsinput",
+        "angularjs-bootstrap-tagsinput",
+        "kiddy2910",
+        "dangduy2910@gmail.com"
+    ],
+    "authors": [ "kiddy2910 <dangduy2910@gmail.com>" ],
+    "license": "MIT",
+    "homepage": "https://github.com/kiddy2910/angularjs-bootstrap-tagsinput.git",
+    "ignore": [
+        "*",
+        "!dist/**",
+        "!sample/**",
+        "!src/**"
+    ],
+    "devDependencies": {
+        "angular": "<=1.2.16",
+        "angular-ui-utils": "~0.0.4",
+        "jquery": "1.10.2",
+        "bootstrap": ">=3.0.0 <4.0",
+        "typeahead.js": "~0.10.0",
+        "handlebars": "~2.0.0",
+        "underscore": "1.6.0"
+    }
+}

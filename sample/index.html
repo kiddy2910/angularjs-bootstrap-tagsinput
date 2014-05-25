@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html ng-app="angularApp" ng-controller="MainController">
+
+<head>
+    <meta http-equiv="X-UA-Compatible" content="IE=8">
+    <meta charset="utf-8">
+    <link href="../bower_components/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet"/>
+    <script src="../bower_components/jquery/jquery.min.js"></script>
+    <script src="../bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
+    <script src="../bower_components/angular/angular.min.js"></script>
+    <script src="../bower_components/underscore/underscore.js"></script>
+
+    <link href="../dist/angularjs-bootstrap-tagsinput.css" rel="stylesheet"/>
+    <script src="../dist/angularjs-bootstrap-tagsinput.js"></script>
+    <script src="script.js"></script>
+</head>
+
+<body style="margin: 15px">
+
+    <div tagsinput
+         maxtags="10" maxlength="5" tags="dummyTags"
+         corrector="corrector(tag)" matcher="matcher(tag)"
+         placeholder="Please input the phone number"></div>
+
+<style>
+    .angularjs-bootstrap-tagsinput {
+        width: 400px;
+    }
+    .angularjs-bootstrap-tagsinput [data-role=tags] {
+        height: 100px;
+    }
+</style>
+</body>
+
+</html>

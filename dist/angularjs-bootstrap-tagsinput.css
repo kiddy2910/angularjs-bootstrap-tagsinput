@@ -1,0 +1,73 @@
+.angularjs-bootstrap-tagsinput {
+  display: inline-block;
+  max-width: 100%;
+  margin-bottom: 10px;
+  background-color: #fff;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
+}
+
+.angularjs-bootstrap-tagsinput [data-role=tags] {
+  margin: 2px 6px 4px;
+  overflow: hidden;
+}
+
+.angularjs-bootstrap-tagsinput [data-role=tags] [data-role=tag] {
+  float: left;
+  margin: 3px 2px 0 0;
+  font-size: 100%;
+}
+
+.angularjs-bootstrap-tagsinput [data-role=tags] [data-role=remove] {
+  margin-left: 3px;
+  cursor: pointer;
+}
+
+.angularjs-bootstrap-tagsinput [data-role=tags] [data-role=remove]:after {
+  padding: 0;
+  content: "x";
+}
+
+.angularjs-bootstrap-tagsinput [data-role=tags] [data-role=remove]:hover {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 5px 2px rgba(0, 0, 0, 0.05);
+}
+
+.angularjs-bootstrap-tagsinput [data-role=tags] [data-role=remove]:hover:active {
+  box-shadow: inset 0 3px 5px rgba(0, 0, 0, 0.125);
+}
+
+.angularjs-bootstrap-tagsinput [data-role=tagsinput-message] {
+  display: none;
+  padding: 0 5px;
+  margin-top: 5px;
+  color: orange;
+}
+
+.angularjs-bootstrap-tagsinput .tagsinput {
+  position: relative;
+  margin-top: 5px;
+  border-top: 1px solid #ccc;
+}
+
+.angularjs-bootstrap-tagsinput .tagsinput [data-role=tagsinput] {
+  width: 100%;
+  height: 27px;
+  max-width: inherit;
+  padding: 5px;
+  margin: 0;
+  font-size: 100%;
+  background-color: transparent;
+  border: none;
+  outline: none;
+  box-shadow: none;
+}
+
+.angularjs-bootstrap-tagsinput .tagsinput [data-role=tagsinput]:focus {
+  border: none;
+  box-shadow: none;
+}
+
+.angularjs-bootstrap-tagsinput .tagsinput [data-role=tagsinput].tagsinput-invalid {
+  color: #ff0000;
+}

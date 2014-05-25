@@ -1,0 +1,27 @@
+{
+    "name": "angularjs-bootstrap-tagsinput",
+    "version": "0.1.0",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/kiddy2910/angularjs-bootstrap-tagsinput.git"
+    },
+    "authors": [ "kiddy2910 <dangduy2910@gmail.com>" ],
+    "homepage": "https://github.com/kiddy2910/angularjs-bootstrap-tagsinput.git",
+    "dependencies": {},
+    "devDependencies": {
+        "grunt": "~0.4.1",
+        "grunt-bump": "~0.0.13",
+        "grunt-recess": "~0.4.0",
+        "grunt-contrib-clean": "~0.5.0",
+        "grunt-contrib-copy": "~0.4.1",
+        "grunt-contrib-jshint": "~0.6.4",
+        "grunt-contrib-concat": "~0.3.0",
+        "grunt-contrib-watch": "~0.5.3",
+        "grunt-contrib-uglify": "~0.2.4",
+        "grunt-ngmin": "0.0.3",
+        "grunt-html2js": "~0.1.7",
+        "express": "~3.0",
+        "express-namespace": "~0.1.1",
+        "open": "0.0.3"
+    }
+}
