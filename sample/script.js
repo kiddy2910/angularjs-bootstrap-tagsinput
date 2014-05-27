@@ -43,6 +43,6 @@ angular.module('angularApp', ['angularjs.bootstrap.tagsinput.template', 'angular
         };
 
         $scope.clearTags = function() {
-            $scope.$broadcast('tagsinput:clear');
+            $scope.$broadcast('tagsinput:clear', $scope.tagsProperties.tagsinputId);
         };
     });

@@ -7,13 +7,6 @@
  *
  * Copyright (c) 2014 
  */
-angular.module('angularjs.bootstrap.tagsinput.template', ['angularjs/bootstrap/tagsinput/tagsinput.tpl.html']);
-angular.module('angularjs/bootstrap/tagsinput/tagsinput.tpl.html', []).run([
-  '$templateCache',
-  function ($templateCache) {
-    $templateCache.put('angularjs/bootstrap/tagsinput/tagsinput.tpl.html', '<div class="angularjs-bootstrap-tagsinput">\n' + '    <div data-role="tags">\n' + '        <span data-role="tag" class="label label-info">\n' + '            <span data-role="value"></span>\n' + '            <span data-role="remove"></span>\n' + '        </span>\n' + '    </div>\n' + '\n' + '    <div data-role="tagsinput-message">Press BACKSPACE again to delete the last tag.</div>\n' + '\n' + '    <div class="tagsinput">\n' + '        <input data-role="tagsinput" class="form-control" type="text">\n' + '    </div>\n' + '</div>');
-  }
-]);
 angular.module('angularjs.bootstrap.tagsinput', []).directive('tagsinput', [
   '$templateCache',
   '$timeout',
@@ -283,3 +276,10 @@ angular.module('angularjs.bootstrap.tagsinput', []).directive('tagsinput', [
     INVALID_INPUT: 'tagsinput-invalid'
   }
 });
+angular.module('angularjs.bootstrap.tagsinput.template', ['angularjs/bootstrap/tagsinput/tagsinput.tpl.html']);
+angular.module('angularjs/bootstrap/tagsinput/tagsinput.tpl.html', []).run([
+  '$templateCache',
+  function ($templateCache) {
+    $templateCache.put('angularjs/bootstrap/tagsinput/tagsinput.tpl.html', '<div class="angularjs-bootstrap-tagsinput">\n' + '    <div data-role="tags">\n' + '        <span data-role="tag" class="label label-info">\n' + '            <span data-role="value"></span>\n' + '            <span data-role="remove"></span>\n' + '        </span>\n' + '    </div>\n' + '\n' + '    <div data-role="tagsinput-message">Press BACKSPACE again to delete the last tag.</div>\n' + '\n' + '    <div class="tagsinput">\n' + '        <input data-role="tagsinput" class="form-control" type="text">\n' + '    </div>\n' + '</div>');
+  }
+]);

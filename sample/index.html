@@ -35,7 +35,7 @@
          onadded="onTagsAdded(data)"
          onremoved="onTagsRemoved(data)"></div>
 
-    <div class="event-logs" ng-repeat="log in eventLogs">
+    <div class="event-logs" ng-repeat="log in eventLogs track by $index">
         {{log}}
     </div>
 

@@ -60,7 +60,10 @@ module.exports = function (grunt) {
                 options: {
                     banner: '<%= meta.banner %>'
                 },
-                src: [ '<%= build_dir %>/temp/*.js' ],
+                src: [
+                    '<%= build_dir %>/temp/tagsinput.js',
+                    '<%= build_dir %>/temp/tagsinput-template.js'
+                ],
                 dest: '<%= build_dir %>/<%= pkg.name %>.js'
             }
         },
