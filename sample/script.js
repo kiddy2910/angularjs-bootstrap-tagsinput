@@ -5,6 +5,12 @@ angular.module('angularApp', ['angularjs.bootstrap.tagsinput.template', 'angular
         ];
         $scope.eventLogs = [];
         $scope.manualTag = 'tag3';
+        $scope.tagsProperties = {
+            tagsinputId: '$$$',
+            maxTags: 10,
+            maxLength: 15,
+            placeholder: 'Please input the phone number'
+        };
 
         $scope.corrector = function(tag) {
             return 'fix_' + tag;
@@ -29,11 +35,11 @@ angular.module('angularApp', ['angularjs.bootstrap.tagsinput.template', 'angular
         };
 
         $scope.addTag = function() {
-            $scope.$broadcast('tagsinput:add', $scope.manualTag);
+            $scope.$broadcast('tagsinput:add', $scope.manualTag, $scope.tagsProperties.tagsinputId);
         };
 
         $scope.removeTag = function() {
-            $scope.$broadcast('tagsinput:remove', $scope.manualTag);
+            $scope.$broadcast('tagsinput:remove', $scope.manualTag, $scope.tagsProperties.tagsinputId);
         };
 
         $scope.clearTags = function() {

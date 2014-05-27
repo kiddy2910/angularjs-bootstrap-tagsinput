@@ -24,13 +24,16 @@
         <button ng-click="clearTags()" class="btn btn-danger" type="button">Clear Tags</button>
     </div>
     <br/>
-    <div tagsinput
-         maxtags="10" maxlength="5" tags="dummyTags"
-         corrector="corrector(tag)" matcher="matcher(tag)"
+    <div tagsinput tagsinput-id="tagsProperties.tagsinputId"
+         tags="dummyTags"
+         maxtags="tagsProperties.maxTags"
+         maxlength="tagsProperties.maxLength"
+         placeholder="tagsProperties.placeholder"
+         corrector="corrector(tag)"
+         matcher="matcher(tag)"
          onchanged="onTagsChange(data)"
          onadded="onTagsAdded(data)"
-         onremoved="onTagsRemoved(data)"
-         placeholder="Please input the phone number"></div>
+         onremoved="onTagsRemoved(data)"></div>
 
     <div class="event-logs" ng-repeat="log in eventLogs">
         {{log}}

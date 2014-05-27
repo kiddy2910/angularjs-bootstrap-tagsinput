@@ -27,9 +27,10 @@ angular.module('angularjs.bootstrap.tagsinput', []).directive('tagsinput', [
     var tagsinput = {
         scope: {
           tags: '=?',
-          maxTags: '@maxtags',
-          maxLength: '@maxlength',
-          placeholder: '@',
+          tagsinputId: '=?',
+          maxTags: '=?maxtags',
+          maxLength: '=?maxlength',
+          placeholder: '=?',
           corrector: '&',
           matcher: '&',
           onTagsChanged: '&onchanged',
@@ -42,17 +43,24 @@ angular.module('angularjs.bootstrap.tagsinput', []).directive('tagsinput', [
           return $templateCache.get(templateUrl);
         },
         link: function (scope, element) {
+          var id = scope.tagsinputId == null ? '' : scope.tagsinputId;
           initConfigs(scope, element);
           loadInitTags(scope.tags);
           bindDomEvents();
-          scope.$on('tagsinput:add', function (event, tag) {
-            addTag(tag);
+          scope.$on('tagsinput:add', function (event, tag, tagsinputId) {
+            if (tagsinputId == null || tagsinputId === id) {
+              addTag(tag);
+            }
           });
-          scope.$on('tagsinput:remove', function (event, tag) {
-            removeTag(tag);
+          scope.$on('tagsinput:remove', function (event, tag, tagsinputId) {
+            if (tagsinputId == null || tagsinputId === id) {
+              removeTag(tag);
+            }
           });
-          scope.$on('tagsinput:clear', function () {
-            clearTags();
+          scope.$on('tagsinput:clear', function (event, tagsinputId) {
+            if (tagsinputId == null || tagsinputId === id) {
+              clearTags();
+            }
           });
         }
       };
