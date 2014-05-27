@@ -37,6 +37,7 @@ Use as directive A (attribute) via the name `tagsinput`
 All properties are optional.
 
 - **tags**: array of tags were added in the beginning
+- **tagsinput-id**: id of tagsinput. Use in case of firing events
 - **maxtags**: limit by a number of tags
 - **maxlength**: limit by a length of tag
 - **placeholder**: default text if input nothing
@@ -51,9 +52,9 @@ All properties are optional.
 
 #### Events ####
 
-- `tagsinput:add` accepts one argument **tag** to add to tagList
-- `tagsinput:remove` accepts one argument **tag** to remove it out of tagList
-- `tagsinput:clear` clear tagList
+- `tagsinput:add` add tag to tagList, accepts two arguments (**tag**, **tagsinput-id**) to identify
+- `tagsinput:remove` remove tag out of tagList, accepts two arguments (**tag**, **tagsinput-id**) to identify
+- `tagsinput:clear` clear tagList, accepts one argument (**tagsinput-id**) to identify
 
 ---
 
@@ -66,14 +67,24 @@ All properties are optional.
 
 #### Example ####
 
-    <div tagsinput tags="initPhoneNumbers"
-        maxtags="10" maxlength="15"
-        placeholder="Please input the phone number"
-        corrector="correctPhoneNumber(tag)"
-        matcher="validatePhoneNumber(tag)"
+    <div tagsinput tagsinput-id="tagsProperties.tagsinputId"
+        tags="dummyTags"
+        maxtags="tagsProperties.maxTags"
+        maxlength="tagsProperties.maxLength"
+        placeholder="tagsProperties.placeholder"
+        corrector="corrector(tag)"
+        matcher="matcher(tag)"
         onchanged="onTagsChange(data)"
         onadded="onTagsAdded(data)"
         onremoved="onTagsRemoved(data)"></div>
+         
+    
+    $scope.tagsProperties = {
+        tagsinputId: '$$$',
+        maxTags: 10,
+        maxLength: 15,
+        placeholder: 'Please input the phone number'
+    };
 
 ---
 
