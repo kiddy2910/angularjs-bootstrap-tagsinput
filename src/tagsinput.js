@@ -1,8 +1,9 @@
 angular.module('angularjs.bootstrap.tagsinput', [])
-    .directive('tagsinput', function($templateCache, TagsinputConstants) {
+    .directive('tagsinput', function($templateCache, $timeout, TagsinputConstants) {
         var tagMap = [], removePreviousTag = false;
         // Properties of scope
-        var maxTags, maxLength, placeholder, fnCorrector, fnMatcher;
+        var maxTags, maxLength, placeholder, fnCorrector, fnMatcher,
+            onTagsChangedCallback, onTagsAddedCallback, onTagsRemovedCallback;
         // Variables of DOM
         var $container, $tagListContainer, $tagTemplate, $taginput, $taginputMessage;
 
@@ -13,7 +14,10 @@ angular.module('angularjs.bootstrap.tagsinput', [])
                 maxLength: '@maxlength',
                 placeholder: '@',
                 corrector: '&',
-                matcher: '&'
+                matcher: '&',
+                onTagsChanged: '&onchanged',
+                onTagsAdded: '&onadded',
+                onTagsRemoved: '&onremoved'
             },
             replace: true,
             template: function(element, attrs) {
@@ -25,6 +29,18 @@ angular.module('angularjs.bootstrap.tagsinput', [])
                 initConfigs(scope, element);
                 loadInitTags(scope.tags);
                 bindDomEvents();
+
+                scope.$on('tagsinput:add', function(event, tag) {
+                    addTag(tag);
+                });
+
+                scope.$on('tagsinput:remove', function(event, tag) {
+                    removeTag(tag);
+                });
+
+                scope.$on('tagsinput:clear', function() {
+                    clearTags();
+                });
             }
         };
 
@@ -34,6 +50,9 @@ angular.module('angularjs.bootstrap.tagsinput', [])
             placeholder = scope.placeholder == null ? '' : scope.placeholder;
             fnCorrector = scope.corrector;
             fnMatcher = scope.matcher;
+            onTagsChangedCallback = scope.onTagsChanged;
+            onTagsAddedCallback = scope.onTagsAdded;
+            onTagsRemovedCallback = scope.onTagsRemoved;
             $container = $(element);
             $tagListContainer = $container.find(TagsinputConstants.Role.TAGS);
             $tagTemplate = $container.find(TagsinputConstants.Role.TAG);
@@ -53,7 +72,7 @@ angular.module('angularjs.bootstrap.tagsinput', [])
         function loadInitTags(tags) {
             if(tags != null) {
                 for(var i=0; i<tags.length; i++) {
-                    addTag(tags[i]);
+                    addCorrectedTag(tags[i]);
                 }
             }
         }
@@ -91,24 +110,7 @@ angular.module('angularjs.bootstrap.tagsinput', [])
 
                     default:
                         if ($.inArray(event.which, TagsinputConstants.CONFIRM_KEYS) >= 0) {
-                            if(tagVal.length === 0) {
-                                return;
-                            }
-
-                            var correctedTagVal = fnCorrector({tag: tagVal});
-                            if(correctedTagVal == null) {
-                                correctedTagVal = tagVal;
-                            }
-
-                            if(correctedTagVal.length > 0) {
-                                var valid = fnMatcher({tag: correctedTagVal});
-                                if(valid === false) {
-                                    tagsinputIsInvalid();
-                                    return;
-                                }
-                            }
-
-                            addTag(correctedTagVal);
+                            addTag(tagVal);
                             $taginput.val('');
                             event.preventDefault();
                         }
@@ -130,12 +132,35 @@ angular.module('angularjs.bootstrap.tagsinput', [])
                     return tagMap[i];
                 }
             }
+            return null;
         }
 
         function addTag(tagKey) {
-            if(tagKey.length === 0) {
+            if(tagKey.length === 0 ||
+                isMaxTagsExceeded()) {
                 return;
             }
+
+            var correctedTagKey = fnCorrector({tag: tagKey});
+            if(correctedTagKey == null) {
+                correctedTagKey = tagKey;
+            }
+
+            addCorrectedTag(correctedTagKey);
+        }
+
+        function addCorrectedTag(tagKey) {
+            if(tagKey.length === 0 ||
+                isMaxTagsExceeded()) {
+                return;
+            }
+
+            var valid = fnMatcher({tag: tagKey});
+            if(valid === false) {
+                tagsinputIsInvalid();
+                return;
+            }
+
             var existingTagData = getTagData(tagKey);
             if(existingTagData == null) {
                 var $tag = $($tagTemplate[0].outerHTML);
@@ -144,9 +169,16 @@ angular.module('angularjs.bootstrap.tagsinput', [])
                 $tag.on('click', TagsinputConstants.Role.TAG_REMOVE, function() {
                     removeTag($(this).data('item'));
                 });
-                tagMap.push(createTagData(tagKey, $tag));
                 $tagListContainer.append($tag);
+
+                var tagData = createTagData(tagKey, $tag);
+                tagMap.push(tagData);
                 validateMaxTags();
+
+                invokeFnInAngularContext(function() {
+                    onTagsAddedCallback({data: createTagDataCallback(tagKey)});
+                    onTagsChangedCallback({data: createTagDataCallback(tagKey)});
+                });
 
             } else {
                 flashDuplicatedTag(tagKey);
@@ -161,7 +193,20 @@ angular.module('angularjs.bootstrap.tagsinput', [])
                     return t.key === tagKey;
                 });
                 validateMaxTags();
+
+                invokeFnInAngularContext(function() {
+                    onTagsRemovedCallback({data: createTagDataCallback(tagKey)});
+                    onTagsChangedCallback({data: createTagDataCallback(tagKey)});
+                });
             }
+        }
+
+        function clearTags() {
+            for(var i=0 ;i<tagMap.length; i++) {
+                tagMap[i].dom.remove();
+            }
+            tagMap.splice(0, tagMap.length);
+            validateMaxTags();
         }
 
         function removeTagOnce(arr, fn) {
@@ -177,6 +222,22 @@ angular.module('angularjs.bootstrap.tagsinput', [])
             }
         }
 
+        function createTagDataCallback(changedTag) {
+            return {
+                totalTags: tagMap.length,
+                tags: getTagsList(),
+                tag: changedTag
+            };
+        }
+
+        function getTagsList() {
+            var tags = [];
+            for(var i=0; i<tagMap.length; i++) {
+                tags.push(tagMap[i].key);
+            }
+            return tags;
+        }
+
         function flashDuplicatedTag(tagKey) {
             var duplicatedTagData = getTagData(tagKey);
             if(duplicatedTagData != null) {
@@ -188,9 +249,19 @@ angular.module('angularjs.bootstrap.tagsinput', [])
             $taginputMessage.fadeIn(100).delay(500).fadeOut(800);
         }
 
+        function isMaxTagsExceeded() {
+            return maxTags > 0 && tagMap.length >= maxTags;
+        }
+
         function validateMaxTags() {
-            var readOnly = maxTags > 0 && tagMap.length >= maxTags;
+            var readOnly = isMaxTagsExceeded();
             $taginput.attr('readonly', readOnly);
+
+            if(readOnly === true) {
+                $tagListContainer.addClass(TagsinputConstants.ClassCss.TAGSINPUT_MAX_TAGS);
+            } else {
+                $tagListContainer.removeClass(TagsinputConstants.ClassCss.TAGSINPUT_MAX_TAGS);
+            }
         }
 
         function tagsinputIsValid() {
@@ -199,6 +270,10 @@ angular.module('angularjs.bootstrap.tagsinput', [])
 
         function tagsinputIsInvalid() {
             $taginput.addClass(TagsinputConstants.ClassCss.INVALID_INPUT);
+        }
+
+        function invokeFnInAngularContext(fn) {
+            $timeout(fn);
         }
 
         return tagsinput;
@@ -215,6 +290,7 @@ angular.module('angularjs.bootstrap.tagsinput', [])
             TAGSINPUT_MESSAGE: '[data-role=tagsinput-message]'
         },
         ClassCss: {
+            TAGSINPUT_MAX_TAGS: 'tagsinput-maxtags',
             INVALID_INPUT: 'tagsinput-invalid'
         }
     });
