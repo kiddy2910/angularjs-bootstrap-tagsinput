@@ -3,7 +3,7 @@ angular.module('angularApp', ['angularjs.bootstrap.tagsinput.template', 'angular
         $scope.eventLogs = [];
         $scope.tagsProperties = {
             tagsinputId: '$$$',
-            initTags: ['+84111111111', '+84222222222', '+84333333333', '+84444444444', '+84555555555'],
+            initTags: ['+84111111111', '+8422s2222222', '+84333333333', '+84444444444', '+84555555555'],
             maxTags: 10,
             maxLength: 15,
             placeholder: 'Please input the phone number',
