@@ -11,6 +11,7 @@ The features:
 - **Matcher** Validate the corrected tag before add to tag list
 - Support placeholder of tagsinput
 - Support to customize the template of the tags
+- Allow to add a list of tags from a delimited string
 - Not to add the duplicated tags
 - Press twice **BACKSPACE** to remove the last tag first time, after that only once
 - Support 3 callback events `onchanged`, `onadded` and `onremoved` (>=0.2.0)
@@ -41,6 +42,7 @@ All properties are optional.
 - **maxtags**: limit by a number of tags
 - **maxlength**: limit by a length of tag
 - **placeholder**: default text if input nothing
+- **delimiter**: default comma (`,`). Pass `false` to disable to split tags
 - **template**: your custom template
 - **corrector**: tag will be corrected before validate a tag by **matcher**. MUST return a corrected tag.
 - **matcher**: after tag was corrected, it must be valid before added. MUST return **TRUE** or **FALSE**.
@@ -73,6 +75,7 @@ All properties are optional.
         maxtags="tagsProperties.maxTags"
         maxlength="tagsProperties.maxLength"
         placeholder="tagsProperties.placeholder"
+        delimiter=","
         corrector="correctPhoneNumber(tag)"
         matcher="validatePhoneNumber(tag)"
         onchanged="onTagsChange(data)"

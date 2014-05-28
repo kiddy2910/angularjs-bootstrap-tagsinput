@@ -2,7 +2,7 @@ angular.module('angularjs.bootstrap.tagsinput', [])
     .directive('tagsinput', function($templateCache, $timeout, TagsinputConstants) {
         var tagMap = [], removePreviousTag = false;
         // Properties of scope
-        var maxTags, maxLength, placeholder, fnCorrector, fnMatcher,
+        var maxTags, maxLength, placeholder, delimiter, fnCorrector, fnMatcher,
             onTagsChangedCallback, onTagsAddedCallback, onTagsRemovedCallback;
         // Variables of DOM
         var $container, $tagListContainer, $tagTemplate, $taginput, $taginputMessage;
@@ -14,6 +14,7 @@ angular.module('angularjs.bootstrap.tagsinput', [])
                 maxTags: '=?maxtags',
                 maxLength: '=?maxlength',
                 placeholder: '=?',
+                delimiter: '@',
                 corrector: '&',
                 matcher: '&',
                 onTagsChanged: '&onchanged',
@@ -66,11 +67,13 @@ angular.module('angularjs.bootstrap.tagsinput', [])
             maxTags = parseInt(scope.maxTags, 10);
             maxLength = parseInt(scope.maxLength, 10);
             placeholder = scope.placeholder == null ? '' : scope.placeholder;
+            delimiter = getDelimiter(scope.delimiter);
             fnCorrector = scope.corrector;
             fnMatcher = scope.matcher;
             onTagsChangedCallback = scope.onTagsChanged;
             onTagsAddedCallback = scope.onTagsAdded;
             onTagsRemovedCallback = scope.onTagsRemoved;
+
             $container = $(element);
             $tagListContainer = $container.find(TagsinputConstants.Role.TAGS);
             $tagTemplate = $tagListContainer.find(TagsinputConstants.Role.TAG).clone();
@@ -85,6 +88,16 @@ angular.module('angularjs.bootstrap.tagsinput', [])
             if(!isNaN(maxLength)) {
                 $taginput.attr('maxlength', maxLength);
             }
+        }
+
+        function getDelimiter(d) {
+            if(d == null) {
+                return TagsinputConstants.DELIMITER;
+            }
+            if(d === 'false') {
+                return '';
+            }
+            return d;
         }
 
         function loadInitTags(tags) {
@@ -135,13 +148,16 @@ angular.module('angularjs.bootstrap.tagsinput', [])
                                 return;
                             }
 
-                            var correctedTagKey = correctTag(tagVal);
-                            if(!isValidTag(correctedTagKey)) {
-                                tagsinputIsInvalid();
-                                return;
+                            var inputtedTags = splitTags(tagVal);
+                            for (var i=0; i<inputtedTags.length; i++) {
+                                var correctedTagKey = correctTag(inputtedTags[i]);
+                                if(!isValidTag(correctedTagKey)) {
+                                    tagsinputIsInvalid();
+                                    return;
+                                }
+                                addValidTag(correctedTagKey);
                             }
 
-                            addValidTag(correctedTagKey);
                             $taginput.val('');
                             event.preventDefault();
                         }
@@ -258,6 +274,29 @@ angular.module('angularjs.bootstrap.tagsinput', [])
             }
         }
 
+        function splitTags(tagString) {
+            var splittedTags, fixedTags = [];
+
+            if(tagString == null) {
+                return [];
+            }
+
+            if(delimiter !== '') {
+                splittedTags = tagString.split(delimiter);
+            } else {
+                splittedTags = [ tagString ];
+            }
+
+            for (var i=0; i<splittedTags.length; i++) {
+                fixedTags.push(trim(splittedTags[i]));
+            }
+            return fixedTags;
+        }
+
+        function trim(str) {
+            return str == null ? "" : str.replace(/^\s+|\s+$/g, "");
+        }
+
         function createTagDataCallback(changedTag) {
             return {
                 totalTags: tagMap.length,
@@ -317,6 +356,7 @@ angular.module('angularjs.bootstrap.tagsinput', [])
     .constant('TagsinputConstants', {
         DEFAULT_TEMPLATE: 'angularjs/bootstrap/tagsinput/tagsinput.tpl.html',
         CONFIRM_KEYS: [13, 9],
+        DELIMITER: ',',
         Role: {
             TAGS: '[data-role=tags]',
             TAG: '[data-role=tag]',
