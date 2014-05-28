@@ -18,19 +18,19 @@
 <body style="margin: 15px">
 
     <div>
-        <input ng-model="manualTag" class="form-control" type="text" placeholder="Input manual tag"><br/>
+        <input ng-model="tagsProperties.manualTag" class="form-control" type="text" placeholder="Input manual tag"><br/>
         <button ng-click="addTag()" class="btn btn-primary" type="button">Add Tag</button>
         <button ng-click="removeTag()" class="btn btn-warning" type="button">Remove Tag</button>
         <button ng-click="clearTags()" class="btn btn-danger" type="button">Clear Tags</button>
     </div>
     <br/>
     <div tagsinput tagsinput-id="tagsProperties.tagsinputId"
-         tags="dummyTags"
+         init-tags="tagsProperties.initTags"
          maxtags="tagsProperties.maxTags"
          maxlength="tagsProperties.maxLength"
          placeholder="tagsProperties.placeholder"
-         corrector="corrector(tag)"
-         matcher="matcher(tag)"
+         corrector="correctPhoneNumber(tag)"
+         matcher="validatePhoneNumber(tag)"
          onchanged="onTagsChange(data)"
          onadded="onTagsAdded(data)"
          onremoved="onTagsRemoved(data)"></div>

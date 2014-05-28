@@ -1,6 +1,6 @@
 /**
  * angularjs-bootstrap-tagsinput
- * Version: 0.1.0 (2014-05-27)
+ * Version: 0.1.0 (2014-05-28)
  *
  * Author: kiddy2910 <dangduy2910@gmail.com>
  * https://github.com/kiddy2910/angularjs-bootstrap-tagsinput.git
@@ -19,7 +19,7 @@ angular.module('angularjs.bootstrap.tagsinput', []).directive('tagsinput', [
     var $container, $tagListContainer, $tagTemplate, $taginput, $taginputMessage;
     var tagsinput = {
         scope: {
-          tags: '=?',
+          initTags: '=?',
           tagsinputId: '=?',
           maxTags: '=?maxtags',
           maxLength: '=?maxlength',
@@ -38,7 +38,7 @@ angular.module('angularjs.bootstrap.tagsinput', []).directive('tagsinput', [
         link: function (scope, element) {
           var id = scope.tagsinputId == null ? '' : scope.tagsinputId;
           initConfigs(scope, element);
-          loadInitTags(scope.tags);
+          loadInitTags(scope.initTags);
           bindDomEvents();
           scope.$on('tagsinput:add', function (event, tag, tagsinputId) {
             if (tagsinputId == null || tagsinputId === id) {

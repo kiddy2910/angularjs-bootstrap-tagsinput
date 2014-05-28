@@ -9,7 +9,7 @@ angular.module('angularjs.bootstrap.tagsinput', [])
 
         var tagsinput = {
             scope: {
-                tags: '=?',
+                initTags: '=?',
                 tagsinputId: '=?',
                 maxTags: '=?maxtags',
                 maxLength: '=?maxlength',
@@ -30,7 +30,7 @@ angular.module('angularjs.bootstrap.tagsinput', [])
                 var id = scope.tagsinputId == null ? '' : scope.tagsinputId;
 
                 initConfigs(scope, element);
-                loadInitTags(scope.tags);
+                loadInitTags(scope.initTags);
                 bindDomEvents();
 
                 scope.$on('tagsinput:add', function(event, tag, tagsinputId) {

@@ -36,8 +36,8 @@ Use as directive A (attribute) via the name `tagsinput`
 
 All properties are optional.
 
-- **tags**: array of tags were added in the beginning
 - **tagsinput-id**: id of tagsinput. Use in case of firing events
+- **init-tags**: array of tags were added in the beginning
 - **maxtags**: limit by a number of tags
 - **maxlength**: limit by a length of tag
 - **placeholder**: default text if input nothing
@@ -67,20 +67,21 @@ All properties are optional.
 
 #### Example ####
 
-    <div tagsinput tagsinput-id="tagsProperties.tagsinputId"
-        tags="dummyTags"
+    <div tagsinput
+        tagsinput-id="tagsProperties.tagsinputId"
+        init-tags="tagsProperties.initTags"
         maxtags="tagsProperties.maxTags"
         maxlength="tagsProperties.maxLength"
         placeholder="tagsProperties.placeholder"
-        corrector="corrector(tag)"
-        matcher="matcher(tag)"
+        corrector="correctPhoneNumber(tag)"
+        matcher="validatePhoneNumber(tag)"
         onchanged="onTagsChange(data)"
         onadded="onTagsAdded(data)"
         onremoved="onTagsRemoved(data)"></div>
-         
-    
+
     $scope.tagsProperties = {
         tagsinputId: '$$$',
+        initTags: ['+84111111111', '+84222222222', '+84333333333', '+84444444444', '+84555555555'],
         maxTags: 10,
         maxLength: 15,
         placeholder: 'Please input the phone number'
