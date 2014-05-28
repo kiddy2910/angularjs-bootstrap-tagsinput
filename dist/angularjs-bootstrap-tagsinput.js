@@ -1,6 +1,6 @@
 /**
  * angularjs-bootstrap-tagsinput
- * Version: 0.1.0 (2014-05-28)
+ * Version: 0.2.0 (2014-05-28)
  *
  * Author: kiddy2910 <dangduy2910@gmail.com>
  * https://github.com/kiddy2910/angularjs-bootstrap-tagsinput.git
@@ -42,7 +42,14 @@ angular.module('angularjs.bootstrap.tagsinput', []).directive('tagsinput', [
           bindDomEvents();
           scope.$on('tagsinput:add', function (event, tag, tagsinputId) {
             if (tagsinputId == null || tagsinputId === id) {
-              addTag(tag);
+              if (tag.length === 0) {
+                return;
+              }
+              var correctedTagKey = correctTag(tag);
+              if (!isValidTag(correctedTagKey)) {
+                return;
+              }
+              addValidTag(correctedTagKey);
             }
           });
           scope.$on('tagsinput:remove', function (event, tag, tagsinputId) {
@@ -83,7 +90,10 @@ angular.module('angularjs.bootstrap.tagsinput', []).directive('tagsinput', [
     function loadInitTags(tags) {
       if (tags != null) {
         for (var i = 0; i < tags.length; i++) {
-          addCorrectedTag(tags[i]);
+          if (!isValidTag(tags[i])) {
+            continue;
+          }
+          addValidTag(tags[i]);
         }
       }
     }
@@ -117,7 +127,15 @@ angular.module('angularjs.bootstrap.tagsinput', []).directive('tagsinput', [
           break;
         default:
           if ($.inArray(event.which, TagsinputConstants.CONFIRM_KEYS) >= 0) {
-            addTag(tagVal);
+            if (tagVal.length === 0) {
+              return;
+            }
+            var correctedTagKey = correctTag(tagVal);
+            if (!isValidTag(correctedTagKey)) {
+              tagsinputIsInvalid();
+              return;
+            }
+            addValidTag(correctedTagKey);
             $taginput.val('');
             event.preventDefault();
           }
@@ -139,23 +157,28 @@ angular.module('angularjs.bootstrap.tagsinput', []).directive('tagsinput', [
       }
       return null;
     }
-    function addTag(tagKey) {
-      if (tagKey.length === 0 || isMaxTagsExceeded()) {
-        return;
+    function correctTag(tagKey) {
+      if (tagKey.length === 0) {
+        return tagKey;
       }
       var correctedTagKey = fnCorrector({ tag: tagKey });
       if (correctedTagKey == null) {
         correctedTagKey = tagKey;
       }
-      addCorrectedTag(correctedTagKey);
+      return correctedTagKey;
     }
-    function addCorrectedTag(tagKey) {
-      if (tagKey.length === 0 || isMaxTagsExceeded()) {
-        return;
+    function isValidTag(tagKey) {
+      if (tagKey.length === 0) {
+        return false;
       }
       var valid = fnMatcher({ tag: tagKey });
-      if (valid === false) {
-        tagsinputIsInvalid();
+      if (valid == null) {
+        valid = true;
+      }
+      return valid;
+    }
+    function addValidTag(tagKey) {
+      if (isMaxTagsExceeded()) {
         return;
       }
       var existingTagData = getTagData(tagKey);
