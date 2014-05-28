@@ -2,7 +2,7 @@ angular.module('angularjs.bootstrap.tagsinput', [])
     .directive('tagsinput', function($templateCache, $timeout, TagsinputConstants) {
         var tagMap = [], removePreviousTag = false;
         // Properties of scope
-        var maxTags, maxLength, placeholder, delimiter, fnCorrector, fnMatcher,
+        var maxTags, maxLength, placeholder, delimiter, readOnly, fnCorrector, fnMatcher,
             onTagsChangedCallback, onTagsAddedCallback, onTagsRemovedCallback;
         // Variables of DOM
         var $container, $tagListContainer, $tagTemplate, $taginput, $taginputMessage;
@@ -15,6 +15,7 @@ angular.module('angularjs.bootstrap.tagsinput', [])
                 maxLength: '=?maxlength',
                 placeholder: '=?',
                 delimiter: '@',
+                readonly: '@',
                 corrector: '&',
                 matcher: '&',
                 onTagsChanged: '&onchanged',
@@ -68,6 +69,7 @@ angular.module('angularjs.bootstrap.tagsinput', [])
             maxLength = parseInt(scope.maxLength, 10);
             placeholder = scope.placeholder == null ? '' : scope.placeholder;
             delimiter = getDelimiter(scope.delimiter);
+            readOnly = getReadOnly(scope.readonly);
             fnCorrector = scope.corrector;
             fnMatcher = scope.matcher;
             onTagsChangedCallback = scope.onTagsChanged;
@@ -81,6 +83,9 @@ angular.module('angularjs.bootstrap.tagsinput', [])
             $taginputMessage = $container.find(TagsinputConstants.Role.TAGSINPUT_MESSAGE);
             $taginput.attr('placeholder', placeholder);
             $tagListContainer.html('');
+            if(readOnly === true) {
+                $taginput.remove();
+            }
 
             if(isNaN(maxTags)) {
                 maxTags = -1;
@@ -98,6 +103,13 @@ angular.module('angularjs.bootstrap.tagsinput', [])
                 return '';
             }
             return d;
+        }
+
+        function getReadOnly(ro) {
+            if(ro == null) {
+                return false;
+            }
+            return ro === 'true';
         }
 
         function loadInitTags(tags) {
@@ -329,10 +341,10 @@ angular.module('angularjs.bootstrap.tagsinput', [])
         }
 
         function validateMaxTags() {
-            var readOnly = isMaxTagsExceeded();
-            $taginput.attr('readonly', readOnly);
+            var isMaxTags = isMaxTagsExceeded();
+            $taginput.attr('readonly', isMaxTags);
 
-            if(readOnly === true) {
+            if(isMaxTags === true) {
                 $tagListContainer.addClass(TagsinputConstants.ClassCss.TAGSINPUT_MAX_TAGS);
             } else {
                 $tagListContainer.removeClass(TagsinputConstants.ClassCss.TAGSINPUT_MAX_TAGS);
