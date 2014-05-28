@@ -75,7 +75,7 @@ angular.module('angularjs.bootstrap.tagsinput', []).directive('tagsinput', [
       onTagsRemovedCallback = scope.onTagsRemoved;
       $container = $(element);
       $tagListContainer = $container.find(TagsinputConstants.Role.TAGS);
-      $tagTemplate = $container.find(TagsinputConstants.Role.TAG);
+      $tagTemplate = $tagListContainer.find(TagsinputConstants.Role.TAG).clone();
       $taginput = $container.find(TagsinputConstants.Role.TAGSINPUT);
       $taginputMessage = $container.find(TagsinputConstants.Role.TAGSINPUT_MESSAGE);
       $taginput.attr('placeholder', placeholder);
@@ -183,7 +183,7 @@ angular.module('angularjs.bootstrap.tagsinput', []).directive('tagsinput', [
       }
       var existingTagData = getTagData(tagKey);
       if (existingTagData == null) {
-        var $tag = $($tagTemplate[0].outerHTML);
+        var $tag = $($tagTemplate[0]).clone();
         $tag.find(TagsinputConstants.Role.TAG_VALUE).html(tagKey);
         $tag.find(TagsinputConstants.Role.TAG_REMOVE).data('item', tagKey);
         $tag.on('click', TagsinputConstants.Role.TAG_REMOVE, function () {
