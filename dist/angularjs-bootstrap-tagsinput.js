@@ -1,6 +1,6 @@
 /**
  * angularjs-bootstrap-tagsinput
- * Version: 0.2.0 (2014-05-28)
+ * Version: 0.2.0 (2014-05-29)
  *
  * Author: kiddy2910 <dangduy2910@gmail.com>
  * https://github.com/kiddy2910/angularjs-bootstrap-tagsinput.git

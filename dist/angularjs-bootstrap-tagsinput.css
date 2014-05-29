@@ -10,7 +10,7 @@
 
 .angularjs-bootstrap-tagsinput [data-role=tags] {
   margin: 2px 6px 4px;
-  overflow: hidden;
+  overflow-y: auto;
 }
 
 .angularjs-bootstrap-tagsinput [data-role=tags] [data-role=tag] {
