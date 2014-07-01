@@ -56,8 +56,8 @@ All properties are optional.
 
 #### Events ####
 
-- `tagsinput:add` add tag to tagList, accepts two arguments (**tag**, **tagsinput-id**) to identify
-- `tagsinput:remove` remove tag out of tagList, accepts two arguments (**tag**, **tagsinput-id**) to identify
+- `tagsinput:add` add tag to tagList, accepts two arguments (**tag**, **tagsinput-id**) with **tag** can be a string or an array to identify
+- `tagsinput:remove` remove tag out of tagList, accepts two arguments (**tag**, **tagsinput-id**) with **tag** can be a string or an array to identify
 - `tagsinput:clear` clear tagList, accepts one argument (**tagsinput-id**) to identify
 
 ---
@@ -120,3 +120,19 @@ All properties are optional.
 - **[data-role="remove"]**: button to remove a tag.
 - **[data-role="tagsinput-message"]**: message will be informed before remove the last tag.
 - **[data-role="tagsinput"]**: input the tag.
+
+Change Logs
+===
+### Version 0.2.0 ###
+
+
+### Version 0.1.0 ###
+- Limit by a number of tags.
+- Limit by length of each tag.
+- `corrector` Correct the inputted tag before validate the tag.
+- `matcher` Validate the corrected tag before add to tag list.
+- Support placeholder of tagsinput.
+- Support to customize the template of the tags.
+- Not to add the duplicated tags.
+- Press twice BACKSPACE to remove the last tag first time, after that only once.
+- Class .tagsinput-invalid will be shown if [matcher] return false.
