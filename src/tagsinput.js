@@ -1,5 +1,6 @@
 angular.module('angularjs.bootstrap.tagsinput', [])
     .directive('tagsinput', function($templateCache, $timeout, TagsinputConstants) {
+        // tag data
         var tagMap = [], removePreviousTag = false;
         // Properties of scope
         var maxTags, maxLength, placeholder, delimiter, readOnly, fnCorrector, fnMatcher,
@@ -35,8 +36,8 @@ angular.module('angularjs.bootstrap.tagsinput', [])
                 loadInitTags(scope.initTags);
                 bindDomEvents();
 
-                scope.$on('tagsinput:add', function(event, tag, tagsinputId) {
-                    if(tagsinputId == null || tagsinputId === id) {
+                scope.$on('tagsinput:add', function(event, tags, tagsinputId) {
+                    var addTagFn = function(tag) {
                         if(tag.length === 0) {
                             return;
                         }
@@ -47,12 +48,30 @@ angular.module('angularjs.bootstrap.tagsinput', [])
                         }
 
                         addValidTag(correctedTagKey);
+                    };
+
+                    if(tagsinputId == null || tagsinputId === id) {
+                        if(angular.isArray(tags)) {
+                            angular.forEach(tags, function(t) {
+                                addTagFn(t);
+                            });
+
+                        } else {
+                            addTagFn(tags);
+                        }
                     }
                 });
 
-                scope.$on('tagsinput:remove', function(event, tag, tagsinputId) {
+                scope.$on('tagsinput:remove', function(event, tags, tagsinputId) {
                     if(tagsinputId == null || tagsinputId === id) {
-                        removeTag(tag);
+                        if(angular.isArray(tags)) {
+                            angular.forEach(tags, function(t) {
+                                removeTag(t);
+                            });
+
+                        } else {
+                            removeTag(tags);
+                        }
                     }
                 });
 
@@ -60,6 +79,10 @@ angular.module('angularjs.bootstrap.tagsinput', [])
                     if(tagsinputId == null || tagsinputId === id) {
                         clearTags();
                     }
+                });
+
+                scope.$on('$destroy', function() {
+                    resetData();
                 });
             }
         };
@@ -81,8 +104,10 @@ angular.module('angularjs.bootstrap.tagsinput', [])
             $tagTemplate = $tagListContainer.find(TagsinputConstants.Role.TAG).clone();
             $taginput = $container.find(TagsinputConstants.Role.TAGSINPUT);
             $taginputMessage = $container.find(TagsinputConstants.Role.TAGSINPUT_MESSAGE);
+
             $taginput.attr('placeholder', placeholder);
             $tagListContainer.html('');
+
             if(readOnly === true) {
                 $taginput.remove();
             }
@@ -90,9 +115,15 @@ angular.module('angularjs.bootstrap.tagsinput', [])
             if(isNaN(maxTags)) {
                 maxTags = -1;
             }
+
             if(!isNaN(maxLength)) {
                 $taginput.attr('maxlength', maxLength);
             }
+        }
+
+        function resetData() {
+            tagMap = [];
+            removePreviousTag = false;
         }
 
         function getDelimiter(d) {
