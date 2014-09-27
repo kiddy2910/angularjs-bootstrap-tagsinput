@@ -34,7 +34,8 @@
          matcher="validatePhoneNumber(tag)"
          onchanged="onTagsChange(data)"
          onadded="onTagsAdded(data)"
-         onremoved="onTagsRemoved(data)"></div>
+         onremoved="onTagsRemoved(data)"
+         onreset="onTagsReset()"></div>
 
     <div class="event-logs" ng-repeat="log in eventLogs track by $index">
         {{log}}

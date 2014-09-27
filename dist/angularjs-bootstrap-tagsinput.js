@@ -24,7 +24,8 @@ angular.module('angularjs.bootstrap.tagsinput', []).factory('tagsInput', [
         matcher: options.matcher,
         onTagsChanged: options.onTagsChanged,
         onTagsAdded: options.onTagsAdded,
-        onTagsRemoved: options.onTagsRemoved
+        onTagsRemoved: options.onTagsRemoved,
+        onTagsReset: options.onTagsReset
       };
       this.dom = {};
       this.dom.$container = $(element);
@@ -103,6 +104,7 @@ angular.module('angularjs.bootstrap.tagsinput', []).factory('tagsInput', [
     TagsInput.prototype.clearTags = function () {
       tagMap.reset();
       validateMaxTags(this.dom.$tagInput, this.dom.$tagListContainer);
+      this.fn.onTagsReset();
     };
     var TagMap = function (maxTags) {
       this.options = { maxTags: maxTags };
@@ -329,7 +331,8 @@ angular.module('angularjs.bootstrap.tagsinput', []).factory('tagsInput', [
         templateUrl: '@',
         onTagsChanged: '&onchanged',
         onTagsAdded: '&onadded',
-        onTagsRemoved: '&onremoved'
+        onTagsRemoved: '&onremoved',
+        onTagsReset: '&onreset'
       },
       link: function (scope, element) {
         var id = scope.tagsinputId == null ? '' : scope.tagsinputId;

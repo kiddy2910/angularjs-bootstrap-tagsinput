@@ -32,6 +32,10 @@ angular.module('angularApp', ['angularjs.bootstrap.tagsinput.template', 'angular
                 ' | tags=' + angular.toJson(data.tags) + ']');
         };
 
+        $scope.onTagsReset = function() {
+            $scope.eventLogs.push('Tag reset');
+        };
+
         $scope.addTag = function() {
             $scope.$broadcast('tagsinput:add', $scope.tagsProperties.manualTag, $scope.tagsProperties.tagsinputId);
         };
