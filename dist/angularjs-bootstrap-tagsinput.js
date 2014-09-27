@@ -1,102 +1,290 @@
 /**
  * angularjs-bootstrap-tagsinput
- * Version: 0.2.0 (2014-05-29)
+ * Version: 0.2.0 (2014-09-27)
  *
  * Author: kiddy2910 <dangduy2910@gmail.com>
  * https://github.com/kiddy2910/angularjs-bootstrap-tagsinput.git
  *
  * Copyright (c) 2014 
  */
-angular.module('angularjs.bootstrap.tagsinput', []).directive('tagsinput', [
-  '$templateCache',
-  '$timeout',
-  'TagsinputConstants',
-  function ($templateCache, $timeout, TagsinputConstants) {
-    var tagMap = [], removePreviousTag = false;
-    // Properties of scope
-    var maxTags, maxLength, placeholder, delimiter, readOnly, fnCorrector, fnMatcher, onTagsChangedCallback, onTagsAddedCallback, onTagsRemovedCallback;
-    // Variables of DOM
-    var $container, $tagListContainer, $tagTemplate, $taginput, $taginputMessage;
-    var tagsinput = {
-        scope: {
-          initTags: '=?',
-          tagsinputId: '=?',
-          maxTags: '=?maxtags',
-          maxLength: '=?maxlength',
-          placeholder: '=?',
-          delimiter: '@',
-          readonly: '@',
-          corrector: '&',
-          matcher: '&',
-          onTagsChanged: '&onchanged',
-          onTagsAdded: '&onadded',
-          onTagsRemoved: '&onremoved'
-        },
-        replace: true,
-        template: function (element, attrs) {
-          var templateUrl = attrs.template == null ? TagsinputConstants.DEFAULT_TEMPLATE : attrs.template;
-          return $templateCache.get(templateUrl);
-        },
-        link: function (scope, element) {
-          var id = scope.tagsinputId == null ? '' : scope.tagsinputId;
-          initConfigs(scope, element);
-          loadInitTags(scope.initTags);
-          bindDomEvents();
-          scope.$on('tagsinput:add', function (event, tag, tagsinputId) {
-            if (tagsinputId == null || tagsinputId === id) {
-              if (tag.length === 0) {
-                return;
-              }
-              var correctedTagKey = correctTag(tag);
-              if (!isValidTag(correctedTagKey)) {
-                return;
-              }
-              addValidTag(correctedTagKey);
-            }
-          });
-          scope.$on('tagsinput:remove', function (event, tag, tagsinputId) {
-            if (tagsinputId == null || tagsinputId === id) {
-              removeTag(tag);
-            }
-          });
-          scope.$on('tagsinput:clear', function (event, tagsinputId) {
-            if (tagsinputId == null || tagsinputId === id) {
-              clearTags();
-            }
-          });
-        }
+angular.module('angularjs.bootstrap.tagsinput', []).factory('tagsInput', [
+  'TagsInputConstants',
+  function (TagsInputConstants) {
+    var tagMap;
+    var TagsInput = function (options, element) {
+      this.prop = {
+        maxTags: parseInt(options.maxTags, 10),
+        maxLength: parseInt(options.maxLength, 10),
+        placeholder: options.placeholder,
+        delimiter: getDelimiter(options.delimiter),
+        readOnly: getReadOnly(options.readOnly)
       };
-    function initConfigs(scope, element) {
-      maxTags = parseInt(scope.maxTags, 10);
-      maxLength = parseInt(scope.maxLength, 10);
-      placeholder = scope.placeholder == null ? '' : scope.placeholder;
-      delimiter = getDelimiter(scope.delimiter);
-      readOnly = getReadOnly(scope.readonly);
-      fnCorrector = scope.corrector;
-      fnMatcher = scope.matcher;
-      onTagsChangedCallback = scope.onTagsChanged;
-      onTagsAddedCallback = scope.onTagsAdded;
-      onTagsRemovedCallback = scope.onTagsRemoved;
-      $container = $(element);
-      $tagListContainer = $container.find(TagsinputConstants.Role.TAGS);
-      $tagTemplate = $tagListContainer.find(TagsinputConstants.Role.TAG).clone();
-      $taginput = $container.find(TagsinputConstants.Role.TAGSINPUT);
-      $taginputMessage = $container.find(TagsinputConstants.Role.TAGSINPUT_MESSAGE);
-      $taginput.attr('placeholder', placeholder);
-      $tagListContainer.html('');
-      if (readOnly === true) {
-        $taginput.remove();
+      this.fn = {
+        corrector: options.corrector,
+        matcher: options.matcher,
+        onTagsChanged: options.onTagsChanged,
+        onTagsAdded: options.onTagsAdded,
+        onTagsRemoved: options.onTagsRemoved
+      };
+      this.dom = {};
+      this.dom.$container = $(element);
+      this.dom.$tagListContainer = $(element).find(TagsInputConstants.Role.TAGS);
+      this.dom.$tagTemplate = this.dom.$tagListContainer.find(TagsInputConstants.Role.TAG).clone();
+      this.dom.$tagInput = this.dom.$container.find(TagsInputConstants.Role.TAGSINPUT);
+      this.dom.$tagInput.attr('placeholder', this.prop.placeholder);
+      this.dom.$tagInput.data('placeholder', this.prop.placeholder);
+      this.dom.$tagListContainer.find(TagsInputConstants.Role.TAG).remove();
+      if (this.prop.readOnly) {
+        this.dom.$tagInput.remove();
       }
-      if (isNaN(maxTags)) {
-        maxTags = -1;
+      if (isNaN(this.prop.maxTags)) {
+        this.prop.maxTags = -1;
       }
-      if (!isNaN(maxLength)) {
-        $taginput.attr('maxlength', maxLength);
+      if (!isNaN(this.prop.maxLength)) {
+        this.dom.$tagInput.attr('maxlength', this.prop.maxLength);
       }
+      bindEvents(this);
+    };
+    TagsInput.prototype.addTag = function (tag) {
+      var correctedTag = correctTag(tag, this.fn.corrector);
+      if (tagMap.isMaxTagsExceeded() || !isValidTag(correctedTag, this.fn.matcher)) {
+        return;
+      }
+      var self = this;
+      var tagEntry = tagMap.getEntry(correctedTag);
+      if (tagEntry == null) {
+        var $tag = $(this.dom.$tagTemplate[0]).clone();
+        $tag.find(TagsInputConstants.Role.TAG_VALUE).html(correctedTag);
+        $tag.find(TagsInputConstants.Role.TAG_REMOVE).data('item', correctedTag);
+        $tag.on('click', TagsInputConstants.Role.TAG_REMOVE, function () {
+          self.removeTag($(this).data('item'));
+        });
+        var $tagList = this.dom.$tagListContainer.find(TagsInputConstants.Role.TAG);
+        if ($tagList.length > 0) {
+          $tag.insertAfter($tagList.last());
+        } else {
+          this.dom.$tagListContainer.prepend($tag);
+        }
+        tagMap.addEntry(correctedTag, $tag);
+        validateMaxTags(this.dom.$tagInput, this.dom.$tagListContainer);
+        var data = getDataCallback(tagMap, correctedTag);
+        this.fn.onTagsAdded({ data: data });
+        this.fn.onTagsChanged({ data: data });
+      } else {
+        flashDuplicatedTag(correctedTag);
+      }
+    };
+    TagsInput.prototype.addTags = function (tags) {
+      if (!tags) {
+        return;
+      }
+      for (var i = 0; i < tags.length; i++) {
+        this.addTag(tags[i]);
+      }
+    };
+    TagsInput.prototype.removeTag = function (tag) {
+      if (!tagMap.contains(tag)) {
+        return;
+      }
+      tagMap.removeEntry(tag);
+      validateMaxTags(this.dom.$tagInput, this.dom.$tagListContainer);
+      var data = getDataCallback(tagMap, tag);
+      this.fn.onTagsRemoved({ data: data });
+      this.fn.onTagsChanged({ data: data });
+    };
+    TagsInput.prototype.removeTags = function (tags) {
+      if (!tags) {
+        return;
+      }
+      for (var i = 0; i < tags.length; i++) {
+        this.removeTag(tags[i]);
+      }
+    };
+    TagsInput.prototype.clearTags = function () {
+      tagMap.reset();
+      validateMaxTags(this.dom.$tagInput, this.dom.$tagListContainer);
+    };
+    var TagMap = function (maxTags) {
+      this.options = { maxTags: maxTags };
+      this._ = {
+        entries: [],
+        removePreviousTag: false
+      };
+    };
+    TagMap.prototype.addEntry = function (tag, tagDom) {
+      this._.entries.push({
+        key: tag,
+        dom: tagDom
+      });
+    };
+    TagMap.prototype.getEntry = function (tag) {
+      var t;
+      for (var i = 0; i < this._.entries.length; i++) {
+        t = this._.entries[i];
+        if (t.key === tag) {
+          return t;
+        }
+      }
+      return null;
+    };
+    TagMap.prototype.getLastEntry = function () {
+      return this._.entries[this._.entries.length - 1];
+    };
+    TagMap.prototype.removeEntry = function (tag) {
+      var index = -1;
+      for (var i = 0; i < this._.entries.length; i++) {
+        if (this._.entries[i].key === tag) {
+          this._.entries[i].dom.remove();
+          index = i;
+          break;
+        }
+      }
+      if (index > -1) {
+        this._.entries.splice(index, 1);
+      }
+    };
+    TagMap.prototype.contains = function (tag) {
+      var entry = this.getEntry(tag);
+      return entry != null;
+    };
+    TagMap.prototype.isMaxTagsExceeded = function () {
+      return this.options.maxTags > 0 && this._.entries.length >= this.options.maxTags;
+    };
+    TagMap.prototype.getTagList = function () {
+      var tags = [];
+      for (var i = 0; i < this._.entries.length; i++) {
+        tags.push(this._.entries[i].key);
+      }
+      return tags;
+    };
+    TagMap.prototype.reset = function () {
+      for (var i = 0; i < this._.entries.length; i++) {
+        this._.entries[i].dom.remove();
+      }
+      this._.entries.splice(0, this._.entries.length);
+      this._.removePreviousTag = false;
+    };
+    function bindEvents(tagsInputInstance) {
+      var ins = tagsInputInstance;
+      ins.dom.$container.unbind();
+      ins.dom.$container.on('click', function () {
+        ins.dom.$tagInput.focus();
+      });
+      ins.dom.$tagInput.on('blur', function () {
+        var e = $.Event('keydown');
+        e.which = 13;
+        ins.dom.$tagInput.trigger(e);
+      });
+      ins.dom.$tagInput.on('keydown', function (event) {
+        var tagVal = ins.dom.$tagInput.val();
+        setValidCss(ins.dom.$tagInput);
+        if (tagVal.length > 0) {
+          tagMap._.removePreviousTag = false;
+        }
+        switch (event.which) {
+        case 8:
+          // BACKSPACE
+          if (tagVal.length === 0) {
+            if (tagMap._.removePreviousTag === true) {
+              var lastTag = tagMap.getLastEntry();
+              ins.removeTag(lastTag.key);
+            } else {
+              tagMap._.removePreviousTag = true;
+            }
+          }
+          break;
+        default:
+          if ($.inArray(event.which, TagsInputConstants.CONFIRM_KEYS) >= 0) {
+            if (tagVal.length === 0) {
+              return;
+            }
+            var inputtedTags = splitTags(tagVal);
+            for (var i = 0; i < inputtedTags.length; i++) {
+              var correctedTagKey = correctTag(inputtedTags[i], ins.fn.corrector);
+              if (!isValidTag(correctedTagKey, ins.fn.matcher)) {
+                setInvalidCss(ins.dom.$tagInput);
+                return;
+              }
+              ins.addTag(correctedTagKey);
+            }
+            ins.dom.$tagInput.val('');
+            event.preventDefault();
+          }
+          break;
+        }
+      });
+    }
+    function flashDuplicatedTag(tag) {
+      var tagEntry = tagMap.getEntry(tag);
+      if (tagEntry != null) {
+        tagEntry.dom.fadeOut(100).fadeIn(100);
+      }
+    }
+    function setValidCss($tagInput) {
+      $tagInput.removeClass(TagsInputConstants.ClassCss.INVALID_INPUT);
+    }
+    function setInvalidCss($tagInput) {
+      $tagInput.addClass(TagsInputConstants.ClassCss.INVALID_INPUT);
+    }
+    function isValidTag(tag, matcher) {
+      if (trim(tag).length === 0) {
+        return false;
+      }
+      var isValid = matcher({ tag: tag });
+      if (isValid == null) {
+        isValid = true;
+      }
+      return isValid;
+    }
+    function correctTag(tag, corrector) {
+      if (trim(tag).length === 0) {
+        return '';
+      }
+      var correctedTag = corrector({ tag: tag });
+      if (correctedTag == null) {
+        correctedTag = tag;
+      }
+      return correctedTag;
+    }
+    function validateMaxTags($tagInput, $tagListContainer) {
+      var isMaxTags = tagMap.isMaxTagsExceeded();
+      $tagInput.attr('readonly', isMaxTags);
+      if (isMaxTags === true) {
+        $tagListContainer.addClass(TagsInputConstants.ClassCss.TAGSINPUT_MAX_TAGS);
+        $tagInput.addClass(TagsInputConstants.ClassCss.TAGSINPUT_MAX_TAGS);
+        $tagInput.attr('placeholder', '');
+      } else {
+        $tagListContainer.removeClass(TagsInputConstants.ClassCss.TAGSINPUT_MAX_TAGS);
+        $tagInput.removeClass(TagsInputConstants.ClassCss.TAGSINPUT_MAX_TAGS);
+        $tagInput.attr('placeholder', $tagInput.data('placeholder'));
+      }
+    }
+    function getDataCallback(tagMap, changedTag) {
+      var tagList = tagMap.getTagList();
+      return {
+        totalTags: tagList.length,
+        tags: tagList,
+        tag: changedTag
+      };
+    }
+    function splitTags(tagString, delimiter) {
+      var tagsArr, fixedTags = [];
+      if (tagString == null) {
+        return [];
+      }
+      if (delimiter !== '') {
+        tagsArr = tagString.split(delimiter);
+      } else {
+        tagsArr = [tagString];
+      }
+      for (var i = 0; i < tagsArr.length; i++) {
+        fixedTags.push(trim(tagsArr[i]));
+      }
+      return fixedTags;
     }
     function getDelimiter(d) {
       if (d == null) {
-        return TagsinputConstants.DELIMITER;
+        return TagsInputConstants.DELIMITER;
       }
       if (d === 'false') {
         return '';
@@ -109,221 +297,76 @@ angular.module('angularjs.bootstrap.tagsinput', []).directive('tagsinput', [
       }
       return ro === 'true';
     }
-    function loadInitTags(tags) {
-      if (tags != null) {
-        for (var i = 0; i < tags.length; i++) {
-          if (!isValidTag(tags[i])) {
-            continue;
-          }
-          addValidTag(tags[i]);
-        }
-      }
-    }
-    function bindDomEvents() {
-      $container.on('click', function () {
-        $taginput.focus();
-      });
-      $taginput.on('blur', function () {
-        var e = $.Event('keydown');
-        e.which = 13;
-        $taginput.trigger(e);
-      });
-      $taginput.on('keydown', function (event) {
-        var tagVal = $taginput.val();
-        tagsinputIsValid();
-        if (tagVal.length > 0) {
-          removePreviousTag = false;
-        }
-        switch (event.which) {
-        case 8:
-          // BACKSPACE
-          if (tagVal.length === 0) {
-            if (removePreviousTag === true) {
-              var lastTag = tagMap[tagMap.length - 1];
-              removeTag(lastTag.key);
-            } else {
-              removePreviousTag = true;
-              flashTagsinputMessage();
-            }
-          }
-          break;
-        default:
-          if ($.inArray(event.which, TagsinputConstants.CONFIRM_KEYS) >= 0) {
-            if (tagVal.length === 0) {
-              return;
-            }
-            var inputtedTags = splitTags(tagVal);
-            for (var i = 0; i < inputtedTags.length; i++) {
-              var correctedTagKey = correctTag(inputtedTags[i]);
-              if (!isValidTag(correctedTagKey)) {
-                tagsinputIsInvalid();
-                return;
-              }
-              addValidTag(correctedTagKey);
-            }
-            $taginput.val('');
-            event.preventDefault();
-          }
-          break;
-        }
-      });
-    }
-    function createTagData(tag, $dom) {
-      return {
-        key: tag,
-        dom: $dom
-      };
-    }
-    function getTagData(tagKey) {
-      for (var i = 0; i < tagMap.length; i++) {
-        if (tagMap[i].key === tagKey) {
-          return tagMap[i];
-        }
-      }
-      return null;
-    }
-    function correctTag(tagKey) {
-      if (tagKey.length === 0) {
-        return tagKey;
-      }
-      var correctedTagKey = fnCorrector({ tag: tagKey });
-      if (correctedTagKey == null) {
-        correctedTagKey = tagKey;
-      }
-      return correctedTagKey;
-    }
-    function isValidTag(tagKey) {
-      if (tagKey.length === 0) {
-        return false;
-      }
-      var valid = fnMatcher({ tag: tagKey });
-      if (valid == null) {
-        valid = true;
-      }
-      return valid;
-    }
-    function addValidTag(tagKey) {
-      if (isMaxTagsExceeded()) {
-        return;
-      }
-      var existingTagData = getTagData(tagKey);
-      if (existingTagData == null) {
-        var $tag = $($tagTemplate[0]).clone();
-        $tag.find(TagsinputConstants.Role.TAG_VALUE).html(tagKey);
-        $tag.find(TagsinputConstants.Role.TAG_REMOVE).data('item', tagKey);
-        $tag.on('click', TagsinputConstants.Role.TAG_REMOVE, function () {
-          removeTag($(this).data('item'));
-        });
-        $tagListContainer.append($tag);
-        var tagData = createTagData(tagKey, $tag);
-        tagMap.push(tagData);
-        validateMaxTags();
-        invokeFnInAngularContext(function () {
-          onTagsAddedCallback({ data: createTagDataCallback(tagKey) });
-          onTagsChangedCallback({ data: createTagDataCallback(tagKey) });
-        });
-      } else {
-        flashDuplicatedTag(tagKey);
-      }
-    }
-    function removeTag(tagKey) {
-      var removedTagData = getTagData(tagKey);
-      if (removedTagData != null) {
-        removedTagData.dom.remove();
-        removeTagOnce(tagMap, function (t) {
-          return t.key === tagKey;
-        });
-        validateMaxTags();
-        invokeFnInAngularContext(function () {
-          onTagsRemovedCallback({ data: createTagDataCallback(tagKey) });
-          onTagsChangedCallback({ data: createTagDataCallback(tagKey) });
-        });
-      }
-    }
-    function clearTags() {
-      for (var i = 0; i < tagMap.length; i++) {
-        tagMap[i].dom.remove();
-      }
-      tagMap.splice(0, tagMap.length);
-      validateMaxTags();
-    }
-    function removeTagOnce(arr, fn) {
-      var index = -1;
-      for (var i = 0; i < arr.length; i++) {
-        if (fn(arr[i])) {
-          index = i;
-          break;
-        }
-      }
-      if (index > -1) {
-        arr.splice(index, 1);
-      }
-    }
-    function splitTags(tagString) {
-      var splittedTags, fixedTags = [];
-      if (tagString == null) {
-        return [];
-      }
-      if (delimiter !== '') {
-        splittedTags = tagString.split(delimiter);
-      } else {
-        splittedTags = [tagString];
-      }
-      for (var i = 0; i < splittedTags.length; i++) {
-        fixedTags.push(trim(splittedTags[i]));
-      }
-      return fixedTags;
-    }
     function trim(str) {
       return str == null ? '' : str.replace(/^\s+|\s+$/g, '');
     }
-    function createTagDataCallback(changedTag) {
-      return {
-        totalTags: tagMap.length,
-        tags: getTagsList(),
-        tag: changedTag
-      };
-    }
-    function getTagsList() {
-      var tags = [];
-      for (var i = 0; i < tagMap.length; i++) {
-        tags.push(tagMap[i].key);
-      }
-      return tags;
-    }
-    function flashDuplicatedTag(tagKey) {
-      var duplicatedTagData = getTagData(tagKey);
-      if (duplicatedTagData != null) {
-        duplicatedTagData.dom.fadeOut(100).fadeIn(100);
-      }
-    }
-    function flashTagsinputMessage() {
-      $taginputMessage.fadeIn(100).delay(500).fadeOut(800);
-    }
-    function isMaxTagsExceeded() {
-      return maxTags > 0 && tagMap.length >= maxTags;
-    }
-    function validateMaxTags() {
-      var isMaxTags = isMaxTagsExceeded();
-      $taginput.attr('readonly', isMaxTags);
-      if (isMaxTags === true) {
-        $tagListContainer.addClass(TagsinputConstants.ClassCss.TAGSINPUT_MAX_TAGS);
-      } else {
-        $tagListContainer.removeClass(TagsinputConstants.ClassCss.TAGSINPUT_MAX_TAGS);
-      }
-    }
-    function tagsinputIsValid() {
-      $taginput.removeClass(TagsinputConstants.ClassCss.INVALID_INPUT);
-    }
-    function tagsinputIsInvalid() {
-      $taginput.addClass(TagsinputConstants.ClassCss.INVALID_INPUT);
-    }
-    function invokeFnInAngularContext(fn) {
-      $timeout(fn);
-    }
-    return tagsinput;
+    return function (scope, element) {
+      tagMap = new TagMap(parseInt(scope.maxTags, 10));
+      return new TagsInput(scope, element);
+    };
   }
-]).constant('TagsinputConstants', {
+]).directive('tagsinput', [
+  '$templateCache',
+  'tagsInput',
+  'TagsInputConstants',
+  function ($templateCache, tagsInput, TagsInputConstants) {
+    return {
+      replace: true,
+      template: function (element, attrs) {
+        var templateUrl = attrs.templateUrl == null ? TagsInputConstants.DEFAULT_TEMPLATE : attrs.templateUrl;
+        return $templateCache.get(templateUrl);
+      },
+      scope: {
+        tagsinputId: '=?',
+        initTags: '=?',
+        maxTags: '=?maxtags',
+        maxLength: '=?maxlength',
+        placeholder: '=?',
+        delimiter: '@',
+        readonly: '@',
+        corrector: '&',
+        matcher: '&',
+        templateUrl: '@',
+        onTagsChanged: '&onchanged',
+        onTagsAdded: '&onadded',
+        onTagsRemoved: '&onremoved'
+      },
+      link: function (scope, element) {
+        var id = scope.tagsinputId == null ? '' : scope.tagsinputId;
+        var tagsInputInstance = tagsInput(scope, element);
+        if (scope.initTags != null && angular.isArray(scope.initTags)) {
+          tagsInputInstance.addTags(scope.initTags);
+        }
+        scope.$on('tagsinput:add', function (event, tags, tagsinputId) {
+          var tagArr = tags;
+          if (tagsinputId == null || tagsinputId === id) {
+            if (!angular.isArray(tags)) {
+              tagArr = [tags];
+            }
+            tagsInputInstance.addTags(tagArr);
+          }
+        });
+        scope.$on('tagsinput:remove', function (event, tags, tagsinputId) {
+          var tagArr = tags;
+          if (tagsinputId == null || tagsinputId === id) {
+            if (!angular.isArray(tags)) {
+              tagArr = [tags];
+            }
+            tagsInputInstance.removeTags(tagArr);
+          }
+        });
+        scope.$on('tagsinput:clear', function (event, tagsinputId) {
+          if (tagsinputId == null || tagsinputId === id) {
+            tagsInputInstance.clearTags();
+          }
+        });
+        scope.$on('$destroy', function () {
+          tagsInputInstance.clearTags();
+        });
+      }
+    };
+  }
+]).constant('TagsInputConstants', {
   DEFAULT_TEMPLATE: 'angularjs/bootstrap/tagsinput/tagsinput.tpl.html',
   CONFIRM_KEYS: [
     13,
@@ -335,8 +378,7 @@ angular.module('angularjs.bootstrap.tagsinput', []).directive('tagsinput', [
     TAG: '[data-role=tag]',
     TAG_VALUE: '[data-role=value]',
     TAG_REMOVE: '[data-role=remove]',
-    TAGSINPUT: '[data-role=tagsinput]',
-    TAGSINPUT_MESSAGE: '[data-role=tagsinput-message]'
+    TAGSINPUT: '[data-role=tagsinput]'
   },
   ClassCss: {
     TAGSINPUT_MAX_TAGS: 'tagsinput-maxtags',
@@ -347,6 +389,6 @@ angular.module('angularjs.bootstrap.tagsinput.template', ['angularjs/bootstrap/t
 angular.module('angularjs/bootstrap/tagsinput/tagsinput.tpl.html', []).run([
   '$templateCache',
   function ($templateCache) {
-    $templateCache.put('angularjs/bootstrap/tagsinput/tagsinput.tpl.html', '<div class="angularjs-bootstrap-tagsinput">\n' + '    <div data-role="tags">\n' + '        <span data-role="tag" class="label label-info">\n' + '            <span data-role="value"></span>\n' + '            <span data-role="remove"></span>\n' + '        </span>\n' + '    </div>\n' + '\n' + '    <div data-role="tagsinput-message">Press BACKSPACE again to delete the last tag.</div>\n' + '\n' + '    <div class="tagsinput">\n' + '        <input data-role="tagsinput" class="form-control" type="text">\n' + '    </div>\n' + '</div>');
+    $templateCache.put('angularjs/bootstrap/tagsinput/tagsinput.tpl.html', '<div class="angularjs-bootstrap-tagsinput">\n' + '    <div data-role="tags">\n' + '        <span data-role="tag" class="label label-info">\n' + '            <span data-role="value"></span>\n' + '            <span data-role="remove"></span>\n' + '        </span>\n' + '    </div>\n' + '\n' + '    <div class="tagsinput">\n' + '        <input data-role="tagsinput" class="form-control" type="text">\n' + '    </div>\n' + '</div>');
   }
 ]);

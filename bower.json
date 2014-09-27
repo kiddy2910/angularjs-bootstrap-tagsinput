@@ -21,11 +21,7 @@
     ],
     "devDependencies": {
         "angular": "<=1.2.16",
-        "angular-ui-utils": "~0.0.4",
         "jquery": "1.10.2",
-        "bootstrap": ">=3.0.0 <4.0",
-        "typeahead.js": "~0.10.0",
-        "handlebars": "~2.0.0",
-        "underscore": "1.6.0"
+        "bootstrap": ">=3.0.0 <4.0"
     }
 }
