@@ -15,8 +15,8 @@ The features:
 - Not to add the duplicated tags
 - ReadOnly mode disables to input
 - Press twice **BACKSPACE** to remove the last tag first time, after that only once
-- Support 3 callback events `onchanged`, `onadded` and `onremoved` (>=0.2.0)
-- Support 3 events `tagsinput:add`, `tagsinput:remove]` and `tagsinput:clear` (>=0.2.0)
+- Support 4 callback events `onchanged`, `onadded`, `onremoved` and `onreset` (>=0.2.0)
+- Support 3 events `tagsinput:add`, `tagsinput:remove` and `tagsinput:clear` accept one or more tags (>=0.2.0)
 
 ---
 
@@ -36,36 +36,39 @@ Use as directive A (attribute) via the name `tagsinput`
 
 #### Properties ####
 
-All properties are optional.
+All HTML attributes are optional.
 
-- **tagsinput-id**: id of tagsinput. Use in case of firing events
-- **init-tags**: array of tags were added in the beginning
-- **maxtags**: limit by a number of tags
-- **maxlength**: limit by a length of tag
-- **placeholder**: default text if input nothing
-- **delimiter**: default comma (`,`). Pass `false` to disable to split tags
-- **readonly**: default `false`. Pass `true` to disable to input
-- **template**: your custom template
-- **corrector**: tag will be corrected before validate a tag by **matcher**. MUST return a corrected tag.
-- **matcher**: after tag was corrected, it must be valid before added. MUST return **TRUE** or **FALSE**.
-- **onchanged**: always occurs once tagList was changed (add or remove, not clear). Argument **data = { totalTags, tags, tag }** was passed to callback
-- **onadded**: occurs once new tag was added to tagList. Argument **data = { totalTags, tags, tag }** was passed to callback
-- **onremoved**: occurs once tag was removed out of tagList. Argument **data = { totalTags, tags, tag }** was passed to callback
+- `tagsinput-id`: id of tagsinput. Use in case of firing events
+- `init-tags`: array of tags were added in the beginning, deprecated in >= 0.2.0
+- `maxtags`: limit by a number of tags
+- `maxlength`: limit by a length of tag
+- `placeholder`: default text if input nothing
+- `delimiter`: default comma (`,`). Pass `false` to disable to split tags
+- `readonly`: default `false`. Pass `true` to disable to input
+- `template-url`: your custom template url (in $templateCache)
+- `corrector`: tag will be corrected before validate a tag by **matcher**. MUST return a corrected tag
+- `matcher`: after tag was corrected, it must be valid before added. MUST return **true` or **false**
+- `onchanged(data*)`: always occurs whenever tag list was changed (add or remove, not clear)
+- `onadded(data)`: occurs whenever new tag was added to tag list
+- `onremoved(data)`: occurs whenever tag was removed out of tag list
+- `onreset`: occurs whenever fire event `tagsinput:clear`
+
+*data arguments in callbacks is an object with three properties: { totalTags, tags, tag }
 
 ---
 
 #### Events ####
 
-- `tagsinput:add` add tag to tagList, accepts two arguments (**tag**, **tagsinput-id**) with **tag** can be a string or an array to identify
-- `tagsinput:remove` remove tag out of tagList, accepts two arguments (**tag**, **tagsinput-id**) with **tag** can be a string or an array to identify
-- `tagsinput:clear` clear tagList, accepts one argument (**tagsinput-id**) to identify
+- `tagsinput:add` add one or more tags, accepts two arguments (**tags**, **tagsinput-id**) with **tags** can be a string or an array of tags
+- `tagsinput:remove` remove one or more tags, accepts two arguments (**tags**, **tagsinput-id**) with **tags** can be a string or an array of tags
+- `tagsinput:clear` clear all tags, accepts one argument (**tagsinput-id**)
 
 ---
 
-#### Css classes ####
+#### CSS classes ####
 
-- **tagsinput-invalid**: will be added to input if **matcher** return false
-- **tagsinput-maxtags**: will be added to tagList if tagList reached the maximum amount of tags (>=0.2.0)
+- `tagsinput-invalid`: will be added to input [data-role=tagsinput] if **matcher** return false
+- `tagsinput-maxtags`: will be added to [data-role=tags] and [data-role=tagsinput] if tag list reached the maximum amount of tags (>=0.2.0)
 
 ---
 
@@ -83,7 +86,8 @@ All properties are optional.
         matcher="validatePhoneNumber(tag)"
         onchanged="onTagsChange(data)"
         onadded="onTagsAdded(data)"
-        onremoved="onTagsRemoved(data)"></div>
+        onremoved="onTagsRemoved(data)"
+        onreset="onTagsReset()"></div>
 
     $scope.tagsProperties = {
         tagsinputId: '$$$',
@@ -104,9 +108,6 @@ All properties are optional.
                 <span data-role="remove"></span>
             </span>
         </div>
-
-        <div data-role="tagsinput-message">Press BACKSPACE again to delete the last tag.</div>
-
         <div class="tagsinput">
             <input data-role="tagsinput" class="form-control" type="text">
         </div>
@@ -114,17 +115,19 @@ All properties are optional.
 
 **MUST have attributes:**
 
-- **[data-role="tags"]**: a container contains the tags.
-- **[data-role="tag"]**: define a template of a tag.
-- **[data-role="value"]**: place to show the text of tag.
-- **[data-role="remove"]**: button to remove a tag.
-- **[data-role="tagsinput-message"]**: message will be informed before remove the last tag.
-- **[data-role="tagsinput"]**: input the tag.
+- `[data-role=tags]`: a container contains the tags.
+- `[data-role=tag]`: define a template of a tag.
+- `[data-role=value]`: place to show the text of tag.
+- `[data-role=remove]`: button to remove a tag.
+- `[data-role=tagsinput]`: input the tag.
 
 Change Logs
 ===
 ### Version 0.2.0 ###
-
+- Accept 4 attributes `onchanged`, `onadded`, `onremoved`, and `onreset`
+- Support 3 events `tagsinput:add`, `tagsinput:remove` and `tagsinput:clear`
+- Add class tagsinput-maxtags to [data-role=tags] and [data-role=tagsinput] when reach the max tags
+- Resolve the issues #1, #2, #3, #7, #8, #10
 
 ### Version 0.1.0 ###
 - Limit by a number of tags.
