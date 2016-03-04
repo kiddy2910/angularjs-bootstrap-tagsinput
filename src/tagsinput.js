@@ -1,6 +1,5 @@
 angular.module('angularjs.bootstrap.tagsinput', [])
     .factory('tagsInput', function (TagsInputConstants) {
-        var tagMap;
 
         var TagsInput = function (options, element) {
             this.prop = {
@@ -18,6 +17,7 @@ angular.module('angularjs.bootstrap.tagsinput', [])
                 onTagsRemoved: options.onTagsRemoved,
                 onTagsReset: options.onTagsReset
             };
+            this.tagMap = new TagMap(this.prop.maxTags);
             this.dom = {};
             this.dom.$container = $(element);
             this.dom.$tagListContainer = $(element).find(TagsInputConstants.Role.TAGS);
@@ -41,13 +41,13 @@ angular.module('angularjs.bootstrap.tagsinput', [])
         TagsInput.prototype.addTag = function (tag) {
             var correctedTag = correctTag(tag, this.fn.corrector);
 
-            if (tagMap.isMaxTagsExceeded() ||
+            if (this.tagMap.isMaxTagsExceeded() ||
                 !isValidTag(correctedTag, this.fn.matcher)) {
                 return;
             }
 
             var self = this;
-            var tagEntry = tagMap.getEntry(correctedTag);
+            var tagEntry = this.tagMap.getEntry(correctedTag);
 
             if (tagEntry == null) {
                 var $tag = $(this.dom.$tagTemplate[0]).clone();
@@ -65,16 +65,16 @@ angular.module('angularjs.bootstrap.tagsinput', [])
                     this.dom.$tagListContainer.prepend($tag);
                 }
 
-                tagMap.addEntry(correctedTag, $tag);
+                this.tagMap.addEntry(correctedTag, $tag);
 
-                validateMaxTags(this.dom.$tagInput, this.dom.$tagListContainer);
+                validateMaxTags(this.dom.$tagInput, this.dom.$tagListContainer, this.tagMap);
 
-                var data = getDataCallback(tagMap, correctedTag);
+                var data = getDataCallback(this.tagMap, correctedTag);
                 this.fn.onTagsAdded({data: data});
                 this.fn.onTagsChanged({data: data});
 
             } else {
-                flashDuplicatedTag(correctedTag);
+                flashDuplicatedTag(this.tagMap, correctedTag);
             }
         };
 
@@ -88,15 +88,15 @@ angular.module('angularjs.bootstrap.tagsinput', [])
         };
 
         TagsInput.prototype.removeTag = function (tag) {
-            if (!tagMap.contains(tag)) {
+            if (!this.tagMap.contains(tag)) {
                 return;
             }
 
-            tagMap.removeEntry(tag);
+            this.tagMap.removeEntry(tag);
 
-            validateMaxTags(this.dom.$tagInput, this.dom.$tagListContainer);
+            validateMaxTags(this.dom.$tagInput, this.dom.$tagListContainer, this.tagMap);
 
-            var data = getDataCallback(tagMap, tag);
+            var data = getDataCallback(this.tagMap, tag);
             this.fn.onTagsRemoved({data: data});
             this.fn.onTagsChanged({data: data});
         };
@@ -111,8 +111,8 @@ angular.module('angularjs.bootstrap.tagsinput', [])
         };
 
         TagsInput.prototype.clearTags = function () {
-            tagMap.reset();
-            validateMaxTags(this.dom.$tagInput, this.dom.$tagListContainer);
+            this.tagMap.reset();
+            validateMaxTags(this.dom.$tagInput, this.dom.$tagListContainer, this.tagMap);
             this.fn.onTagsReset();
         };
 
@@ -208,19 +208,21 @@ angular.module('angularjs.bootstrap.tagsinput', [])
                 setValidCss(ins.dom.$tagInput);
 
                 if (tagVal.length > 0) {
-                    tagMap._.removePreviousTag = false;
+                    ins.tagMap._.removePreviousTag = false;
                 }
 
                 switch (event.which) {
                     case 8:
                         // BACKSPACE
                         if (tagVal.length === 0) {
-                            if (tagMap._.removePreviousTag === true) {
-                                var lastTag = tagMap.getLastEntry();
-                                ins.removeTag(lastTag.key);
+                            if (ins.tagMap._.removePreviousTag === true) {
+                                var lastTag = ins.tagMap.getLastEntry();
+                                if (lastTag) {
+                                    ins.removeTag(lastTag.key);   
+                                }
 
                             } else {
-                                tagMap._.removePreviousTag = true;
+                                ins.tagMap._.removePreviousTag = true;
                             }
                         }
                         break;
@@ -249,7 +251,7 @@ angular.module('angularjs.bootstrap.tagsinput', [])
             });
         }
 
-        function flashDuplicatedTag(tag) {
+        function flashDuplicatedTag(tagMap, tag) {
             var tagEntry = tagMap.getEntry(tag);
             if(tagEntry != null) {
                 tagEntry.dom.fadeOut(100).fadeIn(100);
@@ -286,7 +288,7 @@ angular.module('angularjs.bootstrap.tagsinput', [])
             return correctedTag;
         }
 
-        function validateMaxTags($tagInput, $tagListContainer) {
+        function validateMaxTags($tagInput, $tagListContainer, tagMap) {
             var isMaxTags = tagMap.isMaxTagsExceeded();
             $tagInput.attr('readonly', isMaxTags);
             if(isMaxTags === true) {
@@ -354,7 +356,6 @@ angular.module('angularjs.bootstrap.tagsinput', [])
         }
 
         return function (scope, element) {
-            tagMap = new TagMap(parseInt(scope.maxTags, 10));
             return new TagsInput(scope, element);
         };
     })
@@ -368,10 +369,10 @@ angular.module('angularjs.bootstrap.tagsinput', [])
             },
             scope: {
                 tagsinputId: '=?',  // rename to
-                initTags: '=?', // deprecated, remove and use event instead
+                initTags: '=?', // deprecated, remove and use event instead or ngModel
                 maxTags: '=?maxtags',
                 maxLength: '=?maxlength',
-                placeholder: '=?',  // use @ instead
+                placeholder: '@',  // use @ instead
                 delimiter: '@',
                 readonly: '@',
                 corrector: '&',

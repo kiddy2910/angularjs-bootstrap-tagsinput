@@ -1,16 +1,15 @@
 /**
  * angularjs-bootstrap-tagsinput
- * Version: 0.2.0 (2014-09-27)
+ * Version: 0.2.1 (2016-03-04)
  *
  * Author: kiddy2910 <dangduy2910@gmail.com>
  * https://github.com/kiddy2910/angularjs-bootstrap-tagsinput.git
  *
- * Copyright (c) 2014 
+ * Copyright (c) 2016 
  */
 angular.module('angularjs.bootstrap.tagsinput', []).factory('tagsInput', [
   'TagsInputConstants',
   function (TagsInputConstants) {
-    var tagMap;
     var TagsInput = function (options, element) {
       this.prop = {
         maxTags: parseInt(options.maxTags, 10),
@@ -27,6 +26,7 @@ angular.module('angularjs.bootstrap.tagsinput', []).factory('tagsInput', [
         onTagsRemoved: options.onTagsRemoved,
         onTagsReset: options.onTagsReset
       };
+      this.tagMap = new TagMap(this.prop.maxTags);
       this.dom = {};
       this.dom.$container = $(element);
       this.dom.$tagListContainer = $(element).find(TagsInputConstants.Role.TAGS);
@@ -48,11 +48,11 @@ angular.module('angularjs.bootstrap.tagsinput', []).factory('tagsInput', [
     };
     TagsInput.prototype.addTag = function (tag) {
       var correctedTag = correctTag(tag, this.fn.corrector);
-      if (tagMap.isMaxTagsExceeded() || !isValidTag(correctedTag, this.fn.matcher)) {
+      if (this.tagMap.isMaxTagsExceeded() || !isValidTag(correctedTag, this.fn.matcher)) {
         return;
       }
       var self = this;
-      var tagEntry = tagMap.getEntry(correctedTag);
+      var tagEntry = this.tagMap.getEntry(correctedTag);
       if (tagEntry == null) {
         var $tag = $(this.dom.$tagTemplate[0]).clone();
         $tag.find(TagsInputConstants.Role.TAG_VALUE).html(correctedTag);
@@ -66,13 +66,13 @@ angular.module('angularjs.bootstrap.tagsinput', []).factory('tagsInput', [
         } else {
           this.dom.$tagListContainer.prepend($tag);
         }
-        tagMap.addEntry(correctedTag, $tag);
-        validateMaxTags(this.dom.$tagInput, this.dom.$tagListContainer);
-        var data = getDataCallback(tagMap, correctedTag);
+        this.tagMap.addEntry(correctedTag, $tag);
+        validateMaxTags(this.dom.$tagInput, this.dom.$tagListContainer, this.tagMap);
+        var data = getDataCallback(this.tagMap, correctedTag);
         this.fn.onTagsAdded({ data: data });
         this.fn.onTagsChanged({ data: data });
       } else {
-        flashDuplicatedTag(correctedTag);
+        flashDuplicatedTag(this.tagMap, correctedTag);
       }
     };
     TagsInput.prototype.addTags = function (tags) {
@@ -84,12 +84,12 @@ angular.module('angularjs.bootstrap.tagsinput', []).factory('tagsInput', [
       }
     };
     TagsInput.prototype.removeTag = function (tag) {
-      if (!tagMap.contains(tag)) {
+      if (!this.tagMap.contains(tag)) {
         return;
       }
-      tagMap.removeEntry(tag);
-      validateMaxTags(this.dom.$tagInput, this.dom.$tagListContainer);
-      var data = getDataCallback(tagMap, tag);
+      this.tagMap.removeEntry(tag);
+      validateMaxTags(this.dom.$tagInput, this.dom.$tagListContainer, this.tagMap);
+      var data = getDataCallback(this.tagMap, tag);
       this.fn.onTagsRemoved({ data: data });
       this.fn.onTagsChanged({ data: data });
     };
@@ -102,8 +102,8 @@ angular.module('angularjs.bootstrap.tagsinput', []).factory('tagsInput', [
       }
     };
     TagsInput.prototype.clearTags = function () {
-      tagMap.reset();
-      validateMaxTags(this.dom.$tagInput, this.dom.$tagListContainer);
+      this.tagMap.reset();
+      validateMaxTags(this.dom.$tagInput, this.dom.$tagListContainer, this.tagMap);
       this.fn.onTagsReset();
     };
     var TagMap = function (maxTags) {
@@ -181,17 +181,19 @@ angular.module('angularjs.bootstrap.tagsinput', []).factory('tagsInput', [
         var tagVal = ins.dom.$tagInput.val();
         setValidCss(ins.dom.$tagInput);
         if (tagVal.length > 0) {
-          tagMap._.removePreviousTag = false;
+          ins.tagMap._.removePreviousTag = false;
         }
         switch (event.which) {
         case 8:
           // BACKSPACE
           if (tagVal.length === 0) {
-            if (tagMap._.removePreviousTag === true) {
-              var lastTag = tagMap.getLastEntry();
-              ins.removeTag(lastTag.key);
+            if (ins.tagMap._.removePreviousTag === true) {
+              var lastTag = ins.tagMap.getLastEntry();
+              if (lastTag) {
+                ins.removeTag(lastTag.key);
+              }
             } else {
-              tagMap._.removePreviousTag = true;
+              ins.tagMap._.removePreviousTag = true;
             }
           }
           break;
@@ -216,7 +218,7 @@ angular.module('angularjs.bootstrap.tagsinput', []).factory('tagsInput', [
         }
       });
     }
-    function flashDuplicatedTag(tag) {
+    function flashDuplicatedTag(tagMap, tag) {
       var tagEntry = tagMap.getEntry(tag);
       if (tagEntry != null) {
         tagEntry.dom.fadeOut(100).fadeIn(100);
@@ -248,7 +250,7 @@ angular.module('angularjs.bootstrap.tagsinput', []).factory('tagsInput', [
       }
       return correctedTag;
     }
-    function validateMaxTags($tagInput, $tagListContainer) {
+    function validateMaxTags($tagInput, $tagListContainer, tagMap) {
       var isMaxTags = tagMap.isMaxTagsExceeded();
       $tagInput.attr('readonly', isMaxTags);
       if (isMaxTags === true) {
@@ -303,7 +305,6 @@ angular.module('angularjs.bootstrap.tagsinput', []).factory('tagsInput', [
       return str == null ? '' : str.replace(/^\s+|\s+$/g, '');
     }
     return function (scope, element) {
-      tagMap = new TagMap(parseInt(scope.maxTags, 10));
       return new TagsInput(scope, element);
     };
   }
@@ -323,7 +324,7 @@ angular.module('angularjs.bootstrap.tagsinput', []).factory('tagsInput', [
         initTags: '=?',
         maxTags: '=?maxtags',
         maxLength: '=?maxlength',
-        placeholder: '=?',
+        placeholder: '@',
         delimiter: '@',
         readonly: '@',
         corrector: '&',

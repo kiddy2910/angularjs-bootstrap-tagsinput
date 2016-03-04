@@ -79,7 +79,7 @@ All HTML attributes are optional.
         init-tags="tagsProperties.initTags"
         maxtags="tagsProperties.maxTags"
         maxlength="tagsProperties.maxLength"
-        placeholder="tagsProperties.placeholder"
+        placeholder="Input text here"
         delimiter=","
         readonly="true"
         corrector="correctPhoneNumber(tag)"
@@ -123,6 +123,10 @@ All HTML attributes are optional.
 
 Change Logs
 ===
+### Version 0.2.1 ###
+- Convert `placeholder` property from binding to interpolation
+- Resolve issue #13
+
 ### Version 0.2.0 ###
 - Accept 4 attributes `onchanged`, `onadded`, `onremoved`, and `onreset`
 - Support 3 events `tagsinput:add`, `tagsinput:remove` and `tagsinput:clear`
